@@ -1,5 +1,7 @@
 #include "lio_builder/lio_builder.h"
 
+#include <cmath>
+
 // #include <chrono>
 namespace fastlio
 {
@@ -103,6 +105,29 @@ namespace fastlio
     {
         if (!imu_processor_->operator()(meas, cloud_undistorted_lidar_))
             return;
+
+        const double min_r = params_.min_point_range;
+        const double max_r = params_.max_point_range;
+        if ((min_r > 0.0) || (max_r > 0.0))
+        {
+            const double min_r2 = (min_r > 0.0) ? (min_r * min_r) : 0.0;
+            const double max_r2 = (max_r > 0.0) ? (max_r * max_r) : 0.0;
+
+            PointCloudXYZI::Ptr clipped(new PointCloudXYZI);
+            clipped->reserve(cloud_undistorted_lidar_->size());
+            for (const auto &p : cloud_undistorted_lidar_->points)
+            {
+                const double r2 = double(p.x) * double(p.x) + double(p.y) * double(p.y) + double(p.z) * double(p.z);
+                if (!std::isfinite(r2))
+                    continue;
+                if (min_r > 0.0 && r2 < min_r2)
+                    continue;
+                if (max_r > 0.0 && r2 > max_r2)
+                    continue;
+                clipped->points.push_back(p);
+            }
+            cloud_undistorted_lidar_ = clipped;
+        }
 
         down_size_filter_.setInputCloud(cloud_undistorted_lidar_);
         down_size_filter_.filter(*cloud_down_lidar_);

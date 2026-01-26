@@ -1,0 +1,9 @@
+git status  #查看状态
+git checkout -b feature/xxx  #创建新的分支
+
+# 改代码...
+git status
+git add .  #添加到暂存区
+git commit -m "xxx"  #提交代码
+git log --oneline -n 5  #查看最近五条提交历史
+

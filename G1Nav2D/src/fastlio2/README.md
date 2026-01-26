@@ -44,6 +44,23 @@ rosservice call /save_map "{save_path: '/home/nvidia/map_delet.pcd', resolution:
 rosservice call /slam_reloc "{pcd_path: 'you_pcd_path.pcd', x: 0.0, y: 0.0, z: 0.0, roll: 0.0, pitch: 0.0, yaw: 0.0}" 
 ```
 
+## 点云距离裁剪（可用于抑制玻璃远点）
+玻璃/反射等场景可能产生非常远的离群点，影响建图质量。这里提供在 FastLIO 输入前对点云做半径裁剪（单位：米）的参数：
+
+- `lio_builder/min_point_range`：最小距离，0 表示禁用
+- `lio_builder/max_point_range`：最大距离，0 表示禁用
+
+可在建图与定位的 YAML 中配置：
+- `config/mapping.yaml`
+- `config/localize.yaml`
+
+示例（室内可先从 20~30m 试起）：
+```yaml
+lio_builder:
+	min_point_range: 0.0
+	max_point_range: 25.0
+```
+
 ## 特别感谢
 1. [FASTLIO2](https://github.com/hku-mars/FAST_LIO)
 2. [FASTLIO-SAM](https://github.com/kahowang/FAST_LIO_SAM)

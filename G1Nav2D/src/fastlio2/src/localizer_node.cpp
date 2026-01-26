@@ -207,6 +207,8 @@ public:
         nh_.param<double>("lio_builder/cube_len", lio_params_.cube_len, 500.0);
         nh_.param<double>("lio_builder/resolution", lio_params_.resolution, 0.1);
         nh_.param<double>("lio_builder/move_thresh", lio_params_.move_thresh, 1.5);
+        nh_.param<double>("lio_builder/min_point_range", lio_params_.min_point_range, 0.0);
+        nh_.param<double>("lio_builder/max_point_range", lio_params_.max_point_range, 0.0);
         nh_.param<bool>("lio_builder/align_gravity", lio_params_.align_gravity, true);
         nh_.param<std::vector<double>>("lio_builder/imu_ext_rot", lio_params_.imu_ext_rot, std::vector<double>());
         nh_.param<std::vector<double>>("lio_builder/imu_ext_pos", lio_params_.imu_ext_pos, std::vector<double>());

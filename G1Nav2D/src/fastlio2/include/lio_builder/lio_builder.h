@@ -41,6 +41,10 @@ namespace fastlio
         double det_range = 100.0;
         double move_thresh = 1.5;
 
+        // Point range clipping in LiDAR frame (meters). Set to 0 to disable.
+        double min_point_range = 0.0;
+        double max_point_range = 0.0;
+
         bool extrinsic_est_en = false;
         bool align_gravity = false;
     };
