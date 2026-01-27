@@ -57,8 +57,8 @@ rosservice call /slam_reloc "{pcd_path: 'you_pcd_path.pcd', x: 0.0, y: 0.0, z: 0
 示例（室内可先从 20~30m 试起）：
 ```yaml
 lio_builder:
-	min_point_range: 0.0
-	max_point_range: 25.0
+  min_point_range: 0.0
+  max_point_range: 25.0
 ```
 
 ## 特别感谢
