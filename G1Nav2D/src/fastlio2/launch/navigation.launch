@@ -1,18 +1,29 @@
 <launch>
+    <!-- Map paths (override at launch time) -->
+    <arg name="pcd_map" default="/root/HongTu/test2.pcd" />
+    <arg name="map2d_yaml" default="/root/HongTu/map/test2.yaml" />
+    <arg name="ground_pcd" default="" />
+    <!-- Run RViz on the same machine (usually false when visualizing from an external PC) -->
+    <arg name="rviz" default="false" />
+
     <node pkg="tf" type="static_transform_publisher" name="base_to_body" args="0.0 0 0.0 3.1416 3.1416 0 /body /base_link 1" /> 
     <include file="$(find livox_ros_driver2)/launch_ROS1/msg_MID360.launch">
     </include>
     <rosparam command="load" file="$(find fastlio)/config/localize.yaml" />
     <node pkg="fastlio" type="localizer_node" name="localizer_node" output="screen"/>
     <node pkg="fastlio" type="slam_reloc.py" name="slam_reloc" output="screen">
-        <param name="pcd_path" value="/home/unitree/HongTu/G1Nav2D/src/fastlio2/PCD/map.pcd" />
+        <param name="pcd_path" value="$(arg pcd_map)" />
     </node>
     <include file="$(find fastlio)/launch/gridmap_load.launch">
             <arg name="rviz" value="false"/>
+            <arg name="2dmap_file" value="$(arg map2d_yaml)"/>
     </include>
-    <include file="$(find tool)/launch/downsample_pointcloud.launch">
-        <arg name="pcd_file" value="/home/unitree/HongTu/G1Nav2D/src/fastlio2/PCD/ground_map.pcd"/>
-    </include>
+    <!-- Optional: publish a static, downsampled pointcloud from a PCD file (for debugging). -->
+    <group if="$(eval arg('ground_pcd') != '')">
+        <include file="$(find tool)/launch/downsample_pointcloud.launch">
+            <arg name="pcd_file" value="$(arg ground_pcd)"/>
+        </include>
+    </group>
 
     <include file="$(find xju_pnc)/launch/move_base.launch" />
 
@@ -24,5 +35,7 @@
 
     <include file="$(find velocity_smoother_ema)/launch/velocity_smoother_ema.launch">
     </include>
-    <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find fastlio)/rviz/localize.rviz" />
+    <group if="$(arg rviz)">
+        <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find fastlio)/rviz/localize.rviz" />
+    </group>
 </launch>
