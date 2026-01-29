@@ -30,6 +30,88 @@ roslaunch fastlio mapping.launch
 roslaunch fastlio localize.launch
 ```
 
+## 使用自建地图测试导航（推荐：外部PC运行RViz）
+
+假设你已经通过建图得到了：
+
+- 3D 点云地图：`/root/HongTu/test2.pcd`（用于重定位）
+- 2D 地图 YAML：`/root/HongTu/map/test2.yaml`（用于 map_server / move_base）
+
+### 1）机器人端启动（不启动RViz）
+
+在机器人（ROS Master）上执行：
+
+```shell
+cd ~/HongTu/G1Nav2D
+source /opt/ros/noetic/setup.bash
+catkin_make
+source devel/setup.bash
+
+roslaunch fastlio navigation.launch
+```
+说明：
+
+- `pcd_map` 会传给 `slam_reloc.py`，用于调用 `/slam_reloc` 做重定位。
+- `map2d_yaml` 会传给 `map_server`，发布 2D 地图话题 `/map_2d`。
+
+### 2）外部PC配置ROS网络并验证话题
+
+外部PC需要能访问机器人IP（示例：机器人 `192.168.123.164`）。
+
+外部PC（Ubuntu）环境变量示例：
+
+```shell
+export ROS_MASTER_URI=http://192.168.100.29:11311
+export ROS_IP=<外部PC自己的IP>
+```
+
+验证能看到话题：
+
+```shell
+rostopic list
+```
+
+如果看不到话题，优先检查：
+
+- 外部PC与机器人是否同网段、能否 `ping` 通
+- `ROS_MASTER_URI` 是否指向机器人
+- `ROS_IP` 是否填了外部PC的可达IP（不要填 127.0.0.1）
+- 防火墙是否阻断了 11311/随机端口（ROS1会用到随机端口传输话题）
+
+### 3）外部PC启动RViz与必选显示项（Displays）
+
+在外部PC执行：
+
+```shell
+rviz
+```
+
+RViz 顶部：
+
+- `Fixed Frame` 建议设为 `map`（如果 TF 未连通，可临时设为 `local` 排查）
+
+建议添加的 Displays（插件/显示项）：
+
+- `TF`：检查 `map → local → body → base_link` 等坐标系是否连通
+- `Map`：Topic 选 `/map_2d`
+- `LaserScan`：Topic 选 `/scan`
+- `Odometry`：Topic 选 `/slam_odom`
+- （可选）`Path`：Topic 选 `/global_path`、`/local_path`
+- （可选）`PointCloud2`：Topic 可选 `/local_cloud`、`/body_cloud`、`/velodyne_points`
+
+### 4）在RViz中进行定位与下发导航目标
+
+工具栏操作：
+
+1. `2D Pose Estimate`：在地图上点击设置初始位姿（发布 `/initialpose`），触发 `slam_reloc.py` 调用 `/slam_reloc`。
+2. `2D Nav Goal`：在地图上点击设置目标点（发布到 move_base），开始规划并输出速度。
+
+### 5）常见问题快速排查
+
+- 能看到 `/map_2d` 但看不到 `/scan`：检查点云到激光的节点是否在跑，以及是否有 TF 到 `base_link`。
+- RViz 报 TF 错误：先打开 `TF` display，确认 `Fixed Frame` 与 TF 树一致。
+- 规划抖动/误判障碍：通常与地面点/外参/高度阈值有关（点云→scan 的 `min_height/max_height` 也会影响）。
+
 ## 服务脚本
 1. 保存地图
 ```shell

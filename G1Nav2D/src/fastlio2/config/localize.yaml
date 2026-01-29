@@ -15,7 +15,7 @@ lio_builder:
   move_thresh: 1.5
   # Point range clipping in LiDAR frame (meters). Set to 0 to disable.
   min_point_range: 0.0
-  max_point_range: 0.0
+  max_point_range: 5.0
   align_gravity: true
   imu_ext_rot: [1, 0, 0, 0, 1, 0, 0, 0, 1]
   imu_ext_pos: [-0.011, -0.02329, 0.04412]

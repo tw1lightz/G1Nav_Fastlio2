@@ -11,7 +11,16 @@
   ``` bash
   git clone https://github.com/yuanqizhiti/HongTu.git
   ```
+### 复用旧容器（非首次部署）
+```bash
+映射路径：/home/unitree/HongTu→/root/HongTu
 
+# 启动已停止的容器
+docker start ros1_noetic_hongtu
+
+# 进入容器交互终端
+docker exec -it ros1_noetic_hongtu /bin/bash
+```
 ### 2D导航
 - 安装 [Livox SDK2](https://github.com/Livox-SDK/Livox-SDK2)
     ```bash
@@ -40,14 +49,16 @@
 
 - 编译程序
   ``` bash
-  cd HongTu/G1Nav2D/
-  catkin_make
-  
-  #遇到报错可先执行以下命令
-  cd HongTu/G1Nav2D/src/livox_ros_driver2-master/
+  cd /root/HongTu/G1Nav2D/src/livox_ros_driver2-master/
+
+  # 清理旧编译文件
+  rm -rf ../../build/ ../../devel/ ../../install/
+
+  # 执行编译
   ./build.sh ROS1
-  cd HongTu/G1Nav2D/
-  catkin_make
+  catkin_make -DROS_EDITION=ROS1 --pkg livox_ros_driver2
+  catkin_make -DROS_EDITION=ROS1 --pkg fastlio
+  catkin_make -DROS_EDITION=ROS1
   ```
 
 - 安装依赖包
