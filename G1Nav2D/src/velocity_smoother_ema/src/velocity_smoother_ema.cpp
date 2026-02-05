@@ -2,12 +2,14 @@
 
 VelocitySmootherEma::VelocitySmootherEma(ros::NodeHandle* nh):nh_(*nh)
 {
-    nh_.param<double>("/alpha_v", alpha_v, 0.4);
-    nh_.param<double>("/alpha_w", alpha_w, 0.4);
+    // 默认不做EMA衰减（alpha=1.0），避免把TEB的最小速度抹小导致机器人迈不开步
+    nh_.param<double>("/alpha_v", alpha_v, 1.0);
+    nh_.param<double>("/alpha_w", alpha_w, 1.0);
     nh_.param<std::string>("/raw_cmd_topic", raw_cmd_topic, "raw_cmd_vel");
     nh_.param<std::string>("/cmd_topic", cmd_topic, "cmd_vel");
-    nh_.param<double>("/cmd_rate", cmd_rate, 30.0);
-    nh_.param<int>("/stop_counter", stop_counter, 3);
+    nh_.param<double>("/cmd_rate", cmd_rate, 10.0);  // 保持10Hz，给g1_control足够的数据点
+    nh_.param<int>("/stop_counter", stop_counter_max, 30); // 10Hz下30约等于3秒
+    stop_counter = stop_counter_max;
 
     velocity_sub_ = nh_.subscribe(raw_cmd_topic, 10, &VelocitySmootherEma::twist_callback, this);
     velocity_pub_ = nh_.advertise<geometry_msgs::Twist>(cmd_topic, 10, true);
@@ -33,7 +35,7 @@ void VelocitySmootherEma::twist_callback(const geometry_msgs::Twist::ConstPtr ms
 {
     // ROS_INFO("I RECEIVED A NEW MESSAGE");
     cmd_vel_msg_ = *msg;
-    stop_counter = 10;
+    stop_counter = stop_counter_max;
 }
 
 void VelocitySmootherEma::update(const ros::TimerEvent&)

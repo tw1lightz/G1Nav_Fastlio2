@@ -20,11 +20,14 @@ TebLocalPlannerROS:
  # Robot
 
  max_vel_x: 1.0
- max_vel_x_backwards: 0.05
+ min_vel_x: 0.2
+ max_vel_x_backwards: 0.3
  max_vel_y: 0.0
- max_vel_theta: 0.5
- acc_lim_x: 0.5
- acc_lim_theta: 0.5
+ min_vel_y: 0.0
+ max_vel_theta: 0.7
+ min_vel_theta: 0.3
+ acc_lim_x: 0.8
+ acc_lim_theta: 0.8
  min_turning_radius: 0.0 # diff-drive robot (can turn on place!)
 
  footprint_model: # types: "point", "circular", "two_circles", "line", "polygon"
@@ -40,8 +43,8 @@ TebLocalPlannerROS:
 
  # GoalTolerance
 
- xy_goal_tolerance: 0.2
- yaw_goal_tolerance: 0.1
+ xy_goal_tolerance: 0.5
+ yaw_goal_tolerance: 0.35
  free_goal_vel: False
  complete_global_plan: True
 
@@ -75,7 +78,7 @@ TebLocalPlannerROS:
  weight_kinematics_nh: 1000
  weight_kinematics_forward_drive: 1
  weight_kinematics_turning_radius: 1
- weight_optimaltime: 1 # must be > 0
+ weight_optimaltime: 5 # must be > 0
  weight_shortest_path: 0
  weight_obstacle: 100
  weight_inflation: 0.2
