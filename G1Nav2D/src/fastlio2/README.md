@@ -112,6 +112,38 @@ RViz 顶部：
 - RViz 报 TF 错误：先打开 `TF` display，确认 `Fixed Frame` 与 TF 树一致。
 - 规划抖动/误判障碍：通常与地面点/外参/高度阈值有关（点云→scan 的 `min_height/max_height` 也会影响）。
 
+### 6）2D 地图与 3D PCD 对不上的典型原因与解决
+
+如果你在 RViz 里看到：`/local_cloud` 明显对不上 `/map_2d`（边界/尺度/方向完全不一致），通常不是 TF “小偏差”，而是 **2D 地图和 3D PCD 根本不是同一套坐标系/同一次建图产物**。
+
+推荐做法：在同一次建图过程中，同时保存 PCD 和 2D OccupancyGrid（从 `octomap_server` 的 `projected_map` 保存）。示例：
+
+1）启动建图（包含 `octomap_server`）：
+
+```shell
+roslaunch fastlio mapping.launch
+```
+
+2）保存 3D 点云地图（PCD）：
+
+```shell
+rosservice call /save_map "{save_path: '/root/HongTu/test2.pcd', resolution: 0.0}"
+```
+
+3）保存 2D 地图（pgm + yaml）：
+
+```shell
+mkdir -p /root/HongTu/map
+rosrun map_server map_saver -f /root/HongTu/map/test2 map:=/projected_map
+```
+
+保存完成后，用 `navigation.launch` 的默认参数即可：
+
+- `pcd_map=/root/HongTu/test2.pcd`
+- `map2d_yaml=/root/HongTu/map/test2.yaml`
+
+提示：若 `2D Pose Estimate` 看起来“没反应”，请优先用 `/slam_reloc_check` 确认重定位是否真正成功。
+
 ## 服务脚本
 1. 保存地图
 ```shell
