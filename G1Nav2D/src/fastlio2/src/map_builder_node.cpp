@@ -666,6 +666,13 @@ public:
         nh_.param<double>("loop_closure/submap_resolution", loop_closure_.mutableParams().submap_resolution, 0.2);
         nh_.param<int>("loop_closure/submap_search_num", loop_closure_.mutableParams().submap_search_num, 20);
         nh_.param<double>("loop_closure/loop_icp_thresh", loop_closure_.mutableParams().loop_icp_thresh, 0.3);
+
+        // 动态物体过滤参数（保存地图时生效）
+        nh_.param<bool>("dynamic_filter/enable", dynamic_filter_enable_, false);
+        nh_.param<double>("dynamic_filter/voxel_size", dynamic_filter_voxel_size_, 0.1);
+        nh_.param<int>("dynamic_filter/min_observations", dynamic_filter_min_observations_, 3);
+        nh_.param<int>("dynamic_filter/sor_mean_k", dynamic_filter_sor_mean_k_, 20);
+        nh_.param<double>("dynamic_filter/sor_stddev", dynamic_filter_sor_stddev_, 1.5);
     }
 
     void initSubscribers()
@@ -831,7 +838,6 @@ public:
         for (Pose6D &p : shared_data_->key_poses)
         {
             fastlio::PointCloudXYZI::Ptr temp_cloud(new fastlio::PointCloudXYZI);
-            // Eigen::Quaterniond grav_diff = Eigen::Quaterniond::FromTwoVectors(p.gravity, Eigen::Vector3d(0, 0, -1));
             pcl::transformPointCloud(*shared_data_->cloud_history[p.index],
                                      *temp_cloud,
                                      p.global_pos.cast<float>(),
@@ -844,6 +850,45 @@ public:
             res.message = "Empty cloud!";
             return false;
         }
+
+        // === 多帧一致性滤波：去除动态物体 ===
+        if (dynamic_filter_enable_)
+        {
+            ROS_INFO("Applying dynamic object filter: voxel=%.2f, min_obs=%d, sor_k=%d, sor_std=%.1f",
+                     dynamic_filter_voxel_size_, dynamic_filter_min_observations_,
+                     dynamic_filter_sor_mean_k_, dynamic_filter_sor_stddev_);
+
+            // 步骤1：体素滤波 + 最小观测次数过滤
+            pcl::VoxelGrid<fastlio::PointType> voxel_filter;
+            voxel_filter.setLeafSize(dynamic_filter_voxel_size_,
+                                     dynamic_filter_voxel_size_,
+                                     dynamic_filter_voxel_size_);
+            voxel_filter.setMinimumPointsNumberPerVoxel(dynamic_filter_min_observations_);
+            fastlio::PointCloudXYZI::Ptr voxel_filtered(new fastlio::PointCloudXYZI);
+            voxel_filter.setInputCloud(cloud);
+            voxel_filter.filter(*voxel_filtered);
+            ROS_INFO("After voxel filter: %lu -> %lu points",
+                     cloud->size(), voxel_filtered->size());
+
+            // 步骤2：统计离群点去除
+            if (dynamic_filter_sor_mean_k_ > 0)
+            {
+                pcl::StatisticalOutlierRemoval<fastlio::PointType> sor;
+                sor.setInputCloud(voxel_filtered);
+                sor.setMeanK(dynamic_filter_sor_mean_k_);
+                sor.setStddevMulThresh(dynamic_filter_sor_stddev_);
+                fastlio::PointCloudXYZI::Ptr sor_filtered(new fastlio::PointCloudXYZI);
+                sor.filter(*sor_filtered);
+                ROS_INFO("After SOR filter: %lu -> %lu points",
+                         voxel_filtered->size(), sor_filtered->size());
+                cloud = sor_filtered;
+            }
+            else
+            {
+                cloud = voxel_filtered;
+            }
+        }
+
         res.status = true;
         res.message = "Save map success!";
         writer_.writeBinaryCompressed(file_path, *cloud);
@@ -1128,6 +1173,13 @@ private:
     ros::ServiceServer save_map_server_;
 
     pcl::PCDWriter writer_;
+
+    // 动态物体过滤参数
+    bool dynamic_filter_enable_ = false;
+    double dynamic_filter_voxel_size_ = 0.1;
+    int dynamic_filter_min_observations_ = 3;
+    int dynamic_filter_sor_mean_k_ = 20;
+    double dynamic_filter_sor_stddev_ = 1.5;
 };
 
 class GroundExtractionThread {

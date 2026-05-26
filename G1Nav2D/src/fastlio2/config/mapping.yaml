@@ -13,7 +13,7 @@ lio_builder:
   move_thresh: 1.5
   # Point range clipping in LiDAR frame (meters). Set to 0 to disable.
   min_point_range: 0.0
-  max_point_range: 5.0
+  max_point_range: 25.0
   align_gravity: true
   imu_ext_rot: [1, 0, 0, 0, 1, 0, 0, 0, 1]
   imu_ext_pos: [-0.011, -0.02329, 0.04412]
@@ -30,4 +30,12 @@ loop_closure:
   submap_resolution: 0.2
   submap_search_num: 25
   loop_icp_thresh: 0.1
+
+# 动态物体过滤（保存地图时生效，去除建图过程中跟随的人等动态物体）
+dynamic_filter:
+  enable: true
+  voxel_size: 0.1          # 体素大小(m)，越小保留细节越多
+  min_observations: 3      # 每个体素最少被观测到的次数，低于此值视为动态物体
+  sor_mean_k: 20           # 统计滤波邻居数，设0则跳过此步
+  sor_stddev: 1.5          # 统计滤波标准差倍数，越小过滤越激进
 

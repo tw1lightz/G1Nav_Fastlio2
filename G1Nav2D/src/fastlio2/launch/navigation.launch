@@ -15,7 +15,6 @@
     <!-- body -> base_link: roll=180° for inverted sensor mounting (x y z yaw pitch roll) -->
     <node pkg="tf" type="static_transform_publisher" name="base_to_body" args="0 0 0 0 0 3.1416 /body /base_link 10" /> 
     <include file="$(find livox_ros_driver2)/launch_ROS1/msg_MID360.launch">
-        <arg name="publish_freq" value="50.0"/>
     </include>
     <rosparam command="load" file="$(find fastlio)/config/localize.yaml" />
     <node pkg="fastlio" type="localizer_node" name="localizer_node" output="screen"/>

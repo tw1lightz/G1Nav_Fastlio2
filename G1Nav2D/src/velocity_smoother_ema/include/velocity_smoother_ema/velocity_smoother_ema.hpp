@@ -27,6 +27,7 @@ class VelocitySmootherEma
         float smoothed_x_vel, smoothed_y_vel, smoothed_w_vel;
         geometry_msgs::Twist cmd_vel_msg_;
         int stop_counter = 3;
+        int stop_counter_max = 30;  // stop_counter的最大值，10Hz下30约等于3秒
 };
 
 #endif

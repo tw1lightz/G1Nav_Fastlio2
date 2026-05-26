@@ -4,7 +4,7 @@ body_frame: body
 imu_topic: /livox/imu
 livox_topic: /livox/lidar
 
-local_rate: 30.0
+local_rate: 20.0
 loop_rate: 1.0
 publish_map_cloud: false
 
@@ -15,7 +15,7 @@ lio_builder:
   move_thresh: 1.5
   # Point range clipping in LiDAR frame (meters). Set to 0 to disable.
   min_point_range: 0.0
-  max_point_range: 5.0
+  max_point_range: 25.0
   align_gravity: true
   imu_ext_rot: [1, 0, 0, 0, 1, 0, 0, 0, 1]
   imu_ext_pos: [-0.011, -0.02329, 0.04412]
@@ -26,7 +26,7 @@ localizer:
   refine_iter: 5
   rough_iter: 10
   thresh: 0.15
-  xy_offset: 1.0
-  yaw_offset: 0
+  xy_offset: 2.0
+  yaw_offset: 1.0
   yaw_resolution: 0.5
 
